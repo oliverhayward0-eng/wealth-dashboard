@@ -74,7 +74,7 @@
                 <h3 class="dash-title">Progress to €1M</h3>
                 <div class="flex items-center space-x-2">
                     <div class="w-full bg-transparent border border-blue-500 h-8 p-0.5 flex relative">
-                        <div id="progress-bar" class="bg-fire-green h-full" style="width: 0%"></div>
+                        <div id="progress-bar" class="bg-fire-green h-full transition-all duration-1000" style="width: 0%"></div>
                     </div>
                     <span id="progress-pct" class="text-fire-green font-bold whitespace-nowrap text-xl">0.00%</span>
                 </div>
@@ -144,19 +144,17 @@
         const SHEET_ID = '1n8-7_6vy5onfQro8Kp73sxZrUl0DXGvfvh1ccaoFvY4';
         const API_KEY = 'AIzaSyAbTJNnWCixdHO0pG8I5xBKm-_JxEGWz1U';
         
-        let globalNW = 0; // Needed for the simulator
+        let globalNW = 0; 
 
         async function initDashboard() {
             try {
-                // Fetch Ledger A to I
                 const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/LEDGER!A1:I100?key=${API_KEY}`);
                 const data = await res.json();
-                const rows = data.values;
                 
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'grid';
 
-                processData(rows);
+                processData(data.values);
 
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -164,30 +162,50 @@
             }
         }
 
+        // Smarter currency parser that handles dots and commas properly
         function parseCurrency(str) {
             if (!str) return 0;
-            return parseFloat(str.toString().replace(/[^0-9.-]+/g, "")) || 0;
+            let s = str.toString().replace(/[^0-9.,-]/g, "");
+            if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+                s = s.replace(/\./g, "").replace(",", "."); // European format
+            } else {
+                s = s.replace(/,/g, ""); // US format
+            }
+            return parseFloat(s) || 0;
+        }
+
+        // Simulates =LOOKUP(9^9, A:A) by finding the last valid number
+        function getLastNumber(rows, colIndex) {
+            for (let i = rows.length - 1; i >= 0; i--) {
+                const val = parseCurrency(rows[i][colIndex]);
+                if (val !== 0) return val;
+            }
+            return 0;
         }
 
         function processData(rows) {
-            // Remove headers and filter out empty rows
             const dataRows = rows.slice(1).filter(r => r[0] && r[0].includes('/')); 
             if (dataRows.length === 0) return;
 
-            const latestRow = dataRows[dataRows.length - 1];
-            const prevRow = dataRows.length > 1 ? dataRows[dataRows.length - 2] : latestRow;
-
-            // --- VARIABLES EXTRACTED FROM SHEET ---
-            const currentNW = parseCurrency(latestRow[6]);
+            // --- VARIABLES EXTRACTED ---
+            const currentNW = getLastNumber(dataRows, 6); // Look up Col G specifically
             globalNW = currentNW; 
-            const prevNW = parseCurrency(prevRow[6]);
-            const startNW = parseCurrency(rows[1][8]); // Start of year NW from row 2 col I
             
-            // Arrays for Averages
+            const startNWStr = rows[1] && rows[1][8] ? rows[1][8] : '0'; // Row 2, Col I
+            const startNW = parseCurrency(startNWStr);
+
+            // Monthly change base: Get all valid NWs to find the previous one
+            const allNWs = dataRows.map(r => parseCurrency(r[6])).filter(n => n > 0);
+            const prevNW = allNWs.length > 1 ? allNWs[allNWs.length - 2] : startNW;
+            
+            // Averages
             const allSpends = dataRows.map(r => parseCurrency(r[2])).filter(n => n > 0);
             const avgSpends = allSpends.reduce((a, b) => a + b, 0) / (allSpends.length || 1);
             
-            const allSavingsRates = dataRows.map(r => parseFloat(r[3] || 0)).filter(n => n > 0);
+            const allSavingsRates = dataRows.map(r => {
+                let val = r[3] ? r[3].toString().replace('%', '') : '0';
+                return parseFloat(val) || 0;
+            }).filter(n => n > 0);
             const avgSavingsRate = allSavingsRates.reduce((a, b) => a + b, 0) / (allSavingsRates.length || 1);
             
             const allCashAdded = dataRows.map(r => parseCurrency(r[4])).filter(n => n > 0);
@@ -201,6 +219,10 @@
             const monthlyPct = prevNW > 0 ? (monthlyChange / prevNW) * 100 : 0;
             document.getElementById('mc-val').innerText = (monthlyChange >= 0 ? '€' : '-€') + Math.abs(monthlyChange).toLocaleString('en-US', {maximumFractionDigits: 0});
             document.getElementById('mc-pct').innerText = monthlyPct.toFixed(2) + '%';
+            
+            // Set colors dynamically based on positive/negative
+            document.getElementById('mc-val').className = monthlyChange >= 0 ? 'dash-value text-fire-green' : 'dash-value text-rose-400';
+            document.getElementById('mc-pct').className = monthlyChange >= 0 ? 'text-2xl font-bold text-fire-green' : 'text-2xl font-bold text-rose-400';
 
             // --- 3. YEARLY CHANGE ---
             const yearlyChange = currentNW - startNW;
@@ -208,12 +230,11 @@
             document.getElementById('yc-val').innerText = (yearlyChange >= 0 ? '€' : '-€') + Math.abs(yearlyChange).toLocaleString('en-US', {maximumFractionDigits: 0});
             document.getElementById('yc-pct').innerText = yearlyPct.toFixed(2) + '%';
 
-            // --- 4. €1M DATE (Using your exact formula) ---
-            // =TODAY() + ((1000000 - B2) / (AVERAGE(LEDGER!E:E)*12 + (B2*0.1))) * 365
+            // --- 4. €1M DATE ---
             const formulaDenominator = (avgCashAdded * 12) + (currentNW * 0.1);
             const daysTo1M = formulaDenominator > 0 ? ((1000000 - currentNW) / formulaDenominator) * 365 : 0;
             
-            if (daysTo1M > 0 && daysTo1M < 36500) { // Keep it reasonable
+            if (daysTo1M > 0 && daysTo1M < 36500) { 
                 const targetDate = new Date();
                 targetDate.setDate(targetDate.getDate() + daysTo1M);
                 const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -227,16 +248,13 @@
             document.getElementById('progress-bar').style.width = Math.min(progressPct, 100).toFixed(2) + '%';
             document.getElementById('progress-pct').innerText = progressPct.toFixed(2) + '%';
 
-            // --- 6. SURVIVAL TIME (Using your exact formula) ---
-            // =B2/AVERAGE(LEDGER!C:C)
+            // --- 6. SURVIVAL TIME ---
             const survival = avgSpends > 0 ? currentNW / avgSpends : 0;
             document.getElementById('survival-val').innerText = survival.toFixed(2) + ' Months of Freedom';
 
-            // --- 7. SAVINGS RATE GAUGE (Using your exact formula) ---
-            // =IF(AVERAGE(LEDGER!D:D) > 0.5, "🔥 FIRE MODE", IF(AVERAGE(LEDGER!D:D) < 0.2, "⚠️ LIFESTYLE CREEP", "✅ ON TRACK"))
+            // --- 7. SAVINGS RATE GAUGE ---
             const gaugeEl = document.getElementById('sr-gauge');
             const gaugeText = document.getElementById('sr-text');
-            // Assuming the spreadsheet data comes in as a string like "47.68%" which parses to 47.68
             const decimalRate = avgSavingsRate > 1 ? avgSavingsRate / 100 : avgSavingsRate; 
             
             if (decimalRate > 0.5) {
@@ -251,8 +269,7 @@
             }
 
             // --- 8. YEARLY INVESTMENT TABLE ---
-            // Pending = 19200 - YTD contributions
-            const ytdAdded = allCashAdded.reduce((a,b)=>a+b, 0); // simplistic YTD
+            const ytdAdded = allCashAdded.reduce((a,b)=>a+b, 0); 
             const requiredAnnually = 19200;
             const currentPending = Math.max(0, requiredAnnually - ytdAdded);
             document.getElementById('ytd-pending').innerText = '€' + currentPending.toLocaleString('en-US', {maximumFractionDigits: 0});
@@ -265,7 +282,6 @@
             const tableDiv = document.getElementById('milestone-table');
             tableDiv.innerHTML = '';
             milestones.forEach((target, index) => {
-                // Pending = Target - Current Net Worth
                 let pendingVal = target - currentNW;
                 let pendingStr = pendingVal <= 0 ? 'Hit!' : '€' + pendingVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 let pendingColor = pendingVal <= 0 ? 'text-fire-green font-bold' : 'text-white';
@@ -280,20 +296,19 @@
             });
 
             // --- 9. CAPACITY ---
-            document.getElementById('capacity-val').innerText = '€' + (parseCurrency(latestRow[4])).toLocaleString('en-US', {maximumFractionDigits: 0});
+            const latestCapacity = getLastNumber(dataRows, 4);
+            document.getElementById('capacity-val').innerText = '€' + latestCapacity.toLocaleString('en-US', {maximumFractionDigits: 0});
 
             // --- 10. TREND SPARKLINE ---
-            // Last 12 months of Portfolio Value (Col F)
             let trendData = dataRows.map(r => parseCurrency(r[5])).filter(n => n > 0).slice(-12);
             drawTrend(trendData);
 
-            // Trigger Simulator Initial Run
             runSimulator();
         }
 
         // --- SIMULATOR LOGIC ---
         function runSimulator() {
-            if (globalNW === 0) return; // Prevent run before data loads
+            if (globalNW === 0) return; 
             
             const annualContrib = parseFloat(document.getElementById('sim-contrib').value) || 0;
             const expectedReturnPct = parseFloat(document.getElementById('sim-return').value) || 0;
@@ -307,7 +322,7 @@
             document.getElementById('sim-result').innerText = '$' + wealth.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
-        // --- CHART JS FOR SPARKLINE ---
+        // --- CHART JS ---
         let trendChartInstance = null;
         function drawTrend(dataArray) {
             const ctx = document.getElementById('trendChart').getContext('2d');
@@ -316,18 +331,17 @@
             trendChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: dataArray.map((_, i) => i), // dummy labels
+                    labels: dataArray.map((_, i) => i),
                     datasets: [{
                         data: dataArray,
-                        borderColor: '#3b82f6', // blue line from screenshot
+                        borderColor: '#3b82f6', 
                         borderWidth: 3,
-                        pointRadius: 0, // hide dots to make it a pure sparkline
+                        pointRadius: 0, 
                         tension: 0.1
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false }, tooltip: { enabled: false } },
                     scales: {
                         x: { display: false },
@@ -338,7 +352,6 @@
             });
         }
 
-        // Run
         window.onload = initDashboard;
     </script>
 </body>
