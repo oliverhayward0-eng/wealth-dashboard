@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>€1M Journey Dashboard</title>
+    <title>Financial War Room</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -11,8 +11,8 @@
         .card { background-color: #1e293b; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .tab-btn.active { border-bottom: 2px solid #10b981; color: #10b981; }
         .hidden-tab { display: none; }
-        /* Custom scrollbar for the expenses table */
-        ::-webkit-scrollbar { width: 6px; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
@@ -22,191 +22,135 @@
 
     <header class="bg-slate-900 shadow-md py-4">
         <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-emerald-400">The €1M Project</h1>
+            <h1 class="text-2xl font-bold text-emerald-400">Financial War Room</h1>
             <nav class="flex space-x-6 overflow-x-auto">
-                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn active pb-1 font-semibold hover:text-emerald-300 whitespace-nowrap">Overview</button>
-                <button onclick="switchTab('income')" id="btn-income" class="tab-btn pb-1 font-semibold hover:text-emerald-300 text-slate-400 whitespace-nowrap">Income & NW</button>
-                <button onclick="switchTab('expenses')" id="btn-expenses" class="tab-btn pb-1 font-semibold hover:text-emerald-300 text-slate-400 whitespace-nowrap">Expenses</button>
-                <button onclick="switchTab('investments')" id="btn-investments" class="tab-btn pb-1 font-semibold hover:text-emerald-300 text-slate-400 whitespace-nowrap">Investments</button>
-                <button onclick="switchTab('simulator')" id="btn-simulator" class="tab-btn pb-1 font-semibold hover:text-emerald-300 text-slate-400 whitespace-nowrap">Simulator</button>
+                <button onclick="switchTab('macro')" id="btn-macro" class="tab-btn active pb-1 font-semibold hover:text-emerald-300 whitespace-nowrap">Macro Summary</button>
+                <button onclick="switchTab('cashflow')" id="btn-cashflow" class="tab-btn pb-1 font-semibold hover:text-emerald-300 text-slate-400 whitespace-nowrap">Cash Flow Detail</button>
+                <button onclick="switchTab('portfolio')" id="btn-portfolio" class="tab-btn pb-1 font-semibold hover:text-emerald-300 text-slate-400 whitespace-nowrap">Portfolio War Room</button>
             </nav>
         </div>
     </header>
 
     <main class="flex-grow max-w-7xl mx-auto px-4 py-8 w-full">
-        
-        <div id="loading" class="text-center text-xl text-emerald-400 py-10">Fetching live data from Google Sheets...</div>
+        <div id="loading" class="text-center text-xl text-emerald-400 py-10">Syncing with Google Sheets...</div>
 
-        <div id="tab-dashboard" class="hidden-tab">
+        <div id="tab-macro" class="hidden-tab">
+            <div class="mb-4 flex justify-between items-end">
+                <h2 class="text-xl font-bold text-white">Latest Snapshot: <span id="macro-date" class="text-emerald-400">Loading...</span></h2>
+            </div>
+            
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div class="card text-center">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Current Net Worth</h3>
-                    <p id="dash-nw" class="text-4xl font-bold text-emerald-400">Loading...</p>
+                <div class="card border-t-4 border-emerald-500">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Total Income</h3>
+                    <p id="mac-income" class="text-3xl font-bold text-emerald-400">Loading...</p>
                 </div>
-                <div class="card text-center">
+                <div class="card border-t-4 border-rose-500">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Total Spends</h3>
+                    <p id="mac-spends" class="text-3xl font-bold text-rose-400">Loading...</p>
+                </div>
+                <div class="card border-t-4 border-blue-500">
                     <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Savings Rate</h3>
-                    <p id="dash-sr" class="text-4xl font-bold text-emerald-400">Loading...</p>
+                    <p id="mac-sr" class="text-3xl font-bold text-blue-400">Loading...</p>
                 </div>
-                <div class="card text-center">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Progress to €1M</h3>
-                    <div class="w-full bg-slate-700 rounded-full h-6 mt-4 relative">
-                        <div id="dash-progress-bar" class="bg-emerald-500 h-6 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                        <p id="dash-progress-text" class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white drop-shadow-md"></p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="card flex flex-col justify-center">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">The Wealth Engine</h3>
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
+                        <span class="text-lg">Cash Added to Investments</span>
+                        <span id="mac-added" class="text-2xl font-bold text-emerald-400">Loading...</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg">Total Portfolio Value</span>
+                        <span id="mac-portfolio" class="text-2xl font-bold text-white">Loading...</span>
+                    </div>
+                </div>
+                
+                <div class="card flex flex-col justify-center">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Net Worth Trajectory</h3>
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
+                        <span class="text-lg">Current Net Worth</span>
+                        <span id="mac-nw" class="text-2xl font-bold text-emerald-400">Loading...</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg text-slate-400">Start of Year Net Worth</span>
+                        <span id="mac-start-nw" class="text-xl font-bold text-slate-400">Loading...</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="tab-income" class="hidden-tab">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div class="card border-l-4 border-emerald-500">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase mb-1">Total Monthly Income</h3>
-                    <p id="inc-total" class="text-3xl font-bold text-emerald-400">Loading...</p>
-                </div>
-                <div class="card border-l-4 border-blue-500">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase mb-1">Cash Added to Investments</h3>
-                    <p id="inc-invested" class="text-3xl font-bold text-blue-400">Loading...</p>
-                    <p class="text-xs text-slate-500 mt-1">Fueling the FIRE engine</p>
-                </div>
-                <div class="card border-l-4 border-purple-500">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase mb-1">YTD Net Worth Growth</h3>
-                    <p id="inc-ytd" class="text-3xl font-bold text-purple-400">Loading...</p>
-                    <p class="text-xs text-slate-500 mt-1">Since Jan 1st</p>
-                </div>
+        <div id="tab-cashflow" class="hidden-tab">
+            <div class="mb-6 flex items-center space-x-4">
+                <label class="text-lg font-bold">Select Month:</label>
+                <select id="month-selector" class="bg-slate-800 text-white border border-slate-600 rounded p-2 focus:outline-none focus:border-emerald-500" onchange="renderCashFlowDetail()">
+                    </select>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="card flex flex-col items-center justify-center">
-                    <h2 class="text-xl font-bold mb-4 w-full text-left">Income Breakdown</h2>
-                    <div class="w-full max-w-md">
-                        <canvas id="incomeChart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="card flex flex-col items-center justify-center">
-                    <h2 class="text-xl font-bold mb-4 w-full text-left">Net Worth Progress (YTD)</h2>
-                    <div class="w-full h-[300px] relative">
-                        <canvas id="nwChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-expenses" class="hidden-tab">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div class="card border-l-4 border-rose-500">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase mb-1">Total Spends</h3>
-                    <p id="exp-total" class="text-3xl font-bold text-rose-400">Loading...</p>
-                </div>
-                <div class="card border-l-4 border-slate-500">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase mb-1">Fixed Costs (Core)</h3>
-                    <p id="exp-fixed" class="text-3xl font-bold text-slate-200">Loading...</p>
-                    <p class="text-xs text-slate-500 mt-1">Rent, Loan, Kids, Subs</p>
-                </div>
-                <div class="card border-l-4 border-emerald-500">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase mb-1">Variable Costs (Life)</h3>
-                    <p id="exp-variable" class="text-3xl font-bold text-emerald-400">Loading...</p>
-                    <p class="text-xs text-slate-500 mt-1">Food, Petrol, Dining, Utilities</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="card flex flex-col items-center justify-center">
-                    <h2 class="text-xl font-bold mb-4 w-full text-left">Spending Breakdown</h2>
-                    <div class="w-full max-w-md">
-                        <canvas id="expensesChart"></canvas>
-                    </div>
-                </div>
-                
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div class="card">
-                    <h2 class="text-xl font-bold mb-4">Latest Month Itemized</h2>
-                    <div class="overflow-y-auto pr-2" style="max-height: 350px;">
+                    <h2 class="text-2xl font-bold mb-6 text-emerald-400 border-b border-slate-700 pb-2">Money In</h2>
+                    <table class="w-full text-left border-collapse">
+                        <tbody id="cf-income-body" class="text-lg">
+                            </tbody>
+                        <tfoot class="border-t-2 border-slate-600">
+                            <tr>
+                                <td class="py-3 font-bold text-white">Total Income</td>
+                                <td id="cf-income-total" class="py-3 text-right font-bold text-emerald-400">Loading...</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h2 class="text-2xl font-bold mb-6 text-rose-400 border-b border-slate-700 pb-2">Money Out</h2>
+                    <div class="overflow-y-auto pr-2" style="max-height: 400px;">
                         <table class="w-full text-left border-collapse">
-                            <tbody id="expenses-table-body" class="text-sm">
+                            <tbody id="cf-expenses-body" class="text-base">
                                 </tbody>
+                            <tfoot class="border-t-2 border-slate-600 bg-slate-800 sticky bottom-0">
+                                <tr>
+                                    <td class="py-3 font-bold text-white px-2">Total Spends</td>
+                                    <td id="cf-expenses-total" class="py-3 text-right font-bold text-rose-400 px-2">Loading...</td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="tab-investments" class="hidden-tab">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="card lg:col-span-2 overflow-x-auto">
-                    <h2 class="text-xl font-bold mb-4">Portfolio Holdings</h2>
-                    <table class="w-full text-left border-collapse min-w-[500px]">
-                        <thead>
-                            <tr class="border-b border-slate-700 text-sm text-slate-400 uppercase">
-                                <th class="pb-2">Ticker</th>
-                                <th class="pb-2">Value</th>
-                                <th class="pb-2">P/L</th>
-                                <th class="pb-2">Allocation</th>
-                                <th class="pb-2">Upside</th>
-                            </tr>
-                        </thead>
-                        <tbody id="assets-table-body" class="text-sm">
-                            </tbody>
-                    </table>
-                </div>
-                <div class="card flex flex-col items-center">
-                    <h2 class="text-xl font-bold mb-4 w-full text-left">Asset Allocation</h2>
-                    <div class="w-full max-w-xs">
-                        <canvas id="allocationChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-simulator" class="hidden-tab">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="card lg:col-span-1 flex flex-col space-y-6">
-                    <h2 class="text-xl font-bold mb-2 border-b border-slate-700 pb-2">Variables</h2>
-                    
-                    <div>
-                        <label class="block text-sm font-bold text-slate-400 uppercase mb-2">Current Net Worth (Starting Point)</label>
-                        <p id="sim-starting-nw" class="text-2xl font-bold text-white">€0.00</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-slate-400 uppercase mb-2">Annual Contribution: <span id="sim-contrib-val" class="text-emerald-400">€19,200</span></label>
-                        <input type="range" id="sim-contrib" min="0" max="100000" step="1000" value="19200" class="w-full accent-emerald-500" oninput="updateSimulator()">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-slate-400 uppercase mb-2">Expected Annual Return: <span id="sim-return-val" class="text-emerald-400">10.0%</span></label>
-                        <input type="range" id="sim-return" min="0" max="30" step="0.5" value="10.0" class="w-full accent-emerald-500" oninput="updateSimulator()">
-                    </div>
-
-                    <div class="pt-4 border-t border-slate-700">
-                        <h3 class="text-sm font-bold text-slate-400 uppercase mb-1">Time to €1M</h3>
-                        <p id="sim-years-to-1m" class="text-3xl font-bold text-emerald-400">Calculating...</p>
-                    </div>
-                    
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-400 uppercase mb-1">Wealth in 10 Years</h3>
-                        <p id="sim-10yr-wealth" class="text-3xl font-bold text-emerald-400">Calculating...</p>
-                    </div>
-                </div>
-
-                <div class="card lg:col-span-2">
-                    <h2 class="text-xl font-bold mb-4">Trajectory to €1 Million</h2>
-                    <div class="w-full h-[400px] relative">
-                        <canvas id="simulatorChart"></canvas>
-                    </div>
-                </div>
+        <div id="tab-portfolio" class="hidden-tab">
+            <div class="card overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                        <tr class="border-b-2 border-slate-600 text-xs text-slate-400 uppercase tracking-wider bg-slate-800">
+                            <th class="p-3">Ticker</th>
+                            <th class="p-3">Units Held</th>
+                            <th class="p-3">Live Price</th>
+                            <th class="p-3">Total Invested</th>
+                            <th class="p-3">Current Value</th>
+                            <th class="p-3">Profit/Loss</th>
+                            <th class="p-3">Allocation</th>
+                            <th class="p-3">ATH Diff</th>
+                            <th class="p-3">Upside</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assets-table-body" class="text-sm">
+                        </tbody>
+                </table>
             </div>
         </div>
 
     </main>
 
     <script>
-        // Configuration
         const SHEET_ID = '1n8-7_6vy5onfQro8Kp73sxZrUl0DXGvfvh1ccaoFvY4';
         const API_KEY = 'AIzaSyAbTJNnWCixdHO0pG8I5xBKm-_JxEGWz1U';
         
-        let currentNWValue = 0; 
+        let globalLedgerData = [];
 
-        // Tab Switching Logic
         function switchTab(tabId) {
             document.querySelectorAll('.hidden-tab').forEach(tab => tab.style.display = 'none');
             document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -214,7 +158,6 @@
                 btn.classList.add('text-slate-400');
                 btn.style.borderBottom = 'none';
             });
-            
             document.getElementById('tab-' + tabId).style.display = 'block';
             const activeBtn = document.getElementById('btn-' + tabId);
             activeBtn.classList.add('active', 'text-emerald-400');
@@ -222,25 +165,24 @@
             activeBtn.style.borderBottom = '2px solid #10b981';
         }
 
-        // Initialize App
         async function initApp() {
             try {
-                // Fetch Ledger Data (Expanded range to AH to catch income columns)
-                const ledgerRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/LEDGER!A1:AH5?key=${API_KEY}`);
+                // Fetch Ledger A-AJ (Macro Summary & Cash Flow Detail)
+                const ledgerRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/LEDGER!A1:AJ50?key=${API_KEY}`);
                 const ledgerData = await ledgerRes.json();
+                globalLedgerData = ledgerData.values;
                 
-                // Fetch Assets Data
-                const assetsRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/ASSETS!A1:P30?key=${API_KEY}`);
+                // Fetch Assets (Portfolio War Room)
+                const assetsRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/ASSETS!A1:N50?key=${API_KEY}`);
                 const assetsData = await assetsRes.json();
 
-                hideLoading();
-                populateDashboard(ledgerData.values);
-                populateIncomeNW(ledgerData.values); // NEW TAB
-                populateExpenses(ledgerData.values);
-                populateInvestments(assetsData.values);
+                document.getElementById('loading').style.display = 'none';
                 
-                // Show default tab
-                switchTab('dashboard');
+                populateMacroSummary(globalLedgerData);
+                setupCashFlowDropdown(globalLedgerData);
+                populatePortfolio(assetsData.values);
+                
+                switchTab('macro');
 
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -248,317 +190,156 @@
             }
         }
 
-        function hideLoading() {
-            document.getElementById('loading').style.display = 'none';
-        }
-
-        // --- DASHBOARD LOGIC ---
-        function populateDashboard(ledgerRows) {
-            if (!ledgerRows || ledgerRows.length < 2) return;
+        // --- VIEW 1: MACRO SUMMARY ---
+        function populateMacroSummary(rows) {
+            if (!rows || rows.length < 2) return;
             
-            const netWorthStr = ledgerRows[1][6]; 
-            const savingsRateStr = ledgerRows[1][2]; 
-            
-            document.getElementById('dash-nw').innerText = netWorthStr;
-            document.getElementById('dash-sr').innerText = savingsRateStr;
-
-            currentNWValue = parseFloat(netWorthStr.replace(/[^0-9.-]+/g,""));
-            const target = 1000000;
-            const progressPct = ((currentNWValue / target) * 100).toFixed(2);
-            
-            setTimeout(() => {
-                document.getElementById('dash-progress-bar').style.width = progressPct + '%';
-            }, 100);
-            
-            document.getElementById('dash-progress-text').innerText = progressPct + '% to €1M';
-
-            initSimulator();
-        }
-
-        // --- INCOME & NW LOGIC ---
-        function populateIncomeNW(ledgerRows) {
-            if (!ledgerRows || ledgerRows.length < 3) return;
-            
-            const summaryRow = ledgerRows[1];
-            
-            // Extract core numbers
-            const totalIncomeStr = summaryRow[1] || '€8,186.00';
-            const cashAddedStr = summaryRow[4] || '€4,337.00';
-            const currentNWStr = summaryRow[6] || '€63,118.90';
-            const startNWStr = summaryRow[7] || '56,990.00';
-
-            // Parse values for math
-            const currentNW = parseFloat(currentNWStr.replace(/[^0-9.-]+/g,""));
-            const startNW = parseFloat(startNWStr.replace(/[^0-9.-]+/g,""));
-            const ytdGrowth = currentNW - startNW;
-
-            // Update Cards
-            document.getElementById('inc-total').innerText = totalIncomeStr;
-            document.getElementById('inc-invested').innerText = cashAddedStr;
-            document.getElementById('inc-ytd').innerText = (ytdGrowth >= 0 ? '+' : '') + '€' + ytdGrowth.toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('inc-ytd').className = ytdGrowth >= 0 ? "text-3xl font-bold text-purple-400" : "text-3xl font-bold text-red-400";
-
-            // Fallbacks for Income Breakdown (using your data dump numbers as safe defaults if exact column shifts)
-            const incomeData = [4474.00, 175.00, 3537.00]; 
-            const incomeLabels = ['Salary', 'Food Allowance', 'Donations'];
-            const incomeColors = ['#10b981', '#3b82f6', '#8b5cf6'];
-
-            // Draw Income Donut Chart
-            const ctxInc = document.getElementById('incomeChart').getContext('2d');
-            new Chart(ctxInc, {
-                type: 'doughnut',
-                data: {
-                    labels: incomeLabels,
-                    datasets: [{ data: incomeData, backgroundColor: incomeColors, borderWidth: 0, hoverOffset: 4 }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#cbd5e1' } },
-                        tooltip: { callbacks: { label: function(context) { return ' €' + context.parsed; } } }
-                    }
+            // Find the most recent populated row in column A-G
+            let latestRow = rows[1]; 
+            for(let i = rows.length - 1; i >= 1; i--) {
+                if (rows[i] && rows[i][0] && rows[i][0].includes('/')) {
+                    latestRow = rows[i];
+                    break;
                 }
-            });
+            }
 
-            // Draw YTD Net Worth Progress Bar Chart
-            const ctxNW = document.getElementById('nwChart').getContext('2d');
-            new Chart(ctxNW, {
-                type: 'bar',
-                data: {
-                    labels: ['Start of Year', 'Current'],
-                    datasets: [{
-                        label: 'Net Worth',
-                        data: [startNW, currentNW],
-                        backgroundColor: ['#475569', '#10b981'],
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { callbacks: { label: function(context) { return ' €' + context.parsed.y.toLocaleString('en-US'); } } }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            min: startNW * 0.9, // Dynamic bottom scale for better visual difference
-                            ticks: { color: '#94a3b8' },
-                            grid: { color: '#334155' }
-                        },
-                        x: {
-                            ticks: { color: '#94a3b8' },
-                            grid: { display: false }
-                        }
-                    }
-                }
-            });
+            document.getElementById('macro-date').innerText = latestRow[0] || 'N/A';
+            document.getElementById('mac-income').innerText = latestRow[1] || '€0.00';
+            document.getElementById('mac-spends').innerText = latestRow[2] || '€0.00';
+            document.getElementById('mac-sr').innerText = latestRow[3] || '0%';
+            
+            document.getElementById('mac-added').innerText = latestRow[4] || '€0.00';
+            document.getElementById('mac-portfolio').innerText = latestRow[5] || '€0.00';
+            
+            document.getElementById('mac-nw').innerText = latestRow[6] || '€0.00';
+            
+            // Start of year net worth is usually in row 1, column H (index 7) or I
+            const startNw = rows[1][8] || rows[1][7] || '€56,990.00';
+            document.getElementById('mac-start-nw').innerText = startNw.includes('€') ? startNw : '€' + startNw;
         }
 
-        // --- EXPENSES LOGIC ---
-        function populateExpenses(ledgerRows) {
-            if (!ledgerRows || ledgerRows.length < 3) return;
-
-            const dataRow = ledgerRows[2]; 
-            if (!dataRow) return;
+        // --- VIEW 2: CASH FLOW DETAIL ---
+        function setupCashFlowDropdown(rows) {
+            if (!rows || rows.length < 2) return;
+            const select = document.getElementById('month-selector');
+            select.innerHTML = '';
             
-            const expenses = [
-                { name: 'Kids expenses', amount: parseFloat(dataRow[10]?.replace(/[^0-9.-]+/g,"") || 0), type: 'fixed' },
-                { name: 'Kids Savings', amount: parseFloat(dataRow[11]?.replace(/[^0-9.-]+/g,"") || 0), type: 'fixed' },
-                { name: 'Car Loan', amount: parseFloat(dataRow[12]?.replace(/[^0-9.-]+/g,"") || 0), type: 'fixed' },
-                { name: 'Rent', amount: parseFloat(dataRow[13]?.replace(/[^0-9.-]+/g,"") || 0), type: 'fixed' },
-                { name: 'Food', amount: parseFloat(dataRow[14]?.replace(/[^0-9.-]+/g,"") || 0), type: 'variable' },
-                { name: 'Petrol', amount: parseFloat(dataRow[15]?.replace(/[^0-9.-]+/g,"") || 0), type: 'variable' },
-                { name: 'Restaurants', amount: parseFloat(dataRow[16]?.replace(/[^0-9.-]+/g,"") || 0), type: 'variable' },
-                { name: 'Farmacia', amount: parseFloat(dataRow[17]?.replace(/[^0-9.-]+/g,"") || 0), type: 'variable' },
-                { name: 'Gym', amount: parseFloat(dataRow[18]?.replace(/[^0-9.-]+/g,"") || 0), type: 'fixed' },
-                { name: 'Utilities', amount: (parseFloat(dataRow[19]?.replace(/[^0-9.-]+/g,"") || 0) + 
-                                              parseFloat(dataRow[20]?.replace(/[^0-9.-]+/g,"") || 0) + 
-                                              parseFloat(dataRow[21]?.replace(/[^0-9.-]+/g,"") || 0)), type: 'variable' },
-                { name: 'Internet y Mobiles', amount: parseFloat(dataRow[22]?.replace(/[^0-9.-]+/g,"") || 0), type: 'fixed' },
-                { name: 'Subscriptions', amount: (parseFloat(dataRow[24]?.replace(/[^0-9.-]+/g,"") || 0) + 
-                                                  parseFloat(dataRow[25]?.replace(/[^0-9.-]+/g,"") || 0)), type: 'fixed' },
-                { name: 'Other', amount: parseFloat(dataRow[27]?.replace(/[^0-9.-]+/g,"") || 0), type: 'variable' }
+            // Column K (index 10) holds the Month names
+            for(let i = 1; i < rows.length; i++) {
+                if(rows[i] && rows[i][10] && rows[i][10].trim() !== '') {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.text = rows[i][10];
+                    select.appendChild(option);
+                }
+            }
+            if(select.options.length > 0) renderCashFlowDetail();
+        }
+
+        function renderCashFlowDetail() {
+            const rowIndex = document.getElementById('month-selector').value;
+            const row = globalLedgerData[rowIndex];
+            const headers = globalLedgerData[0];
+
+            if (!row) return;
+
+            // Render Income (AG = 32, AH = 33, AI = 34)
+            const incomeBody = document.getElementById('cf-income-body');
+            incomeBody.innerHTML = '';
+            
+            const incomeSources = [
+                { name: 'Salary', val: row[32] },
+                { name: 'Food Allowance', val: row[33] },
+                { name: 'Donations', val: row[34] }
             ];
+            
+            let totalInc = 0;
+            incomeSources.forEach(src => {
+                if (src.val && src.val !== '€0.00') {
+                    const valNum = parseFloat(src.val.replace(/[^0-9.-]+/g,""));
+                    if (!isNaN(valNum)) totalInc += valNum;
+                    
+                    incomeBody.innerHTML += `
+                        <tr class="border-b border-slate-700/50">
+                            <td class="py-3 text-white">${src.name}</td>
+                            <td class="py-3 text-right text-emerald-400">€${valNum.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
+            });
+            document.getElementById('cf-income-total').innerText = '€' + totalInc.toFixed(2);
 
-            let totalFixed = 0; let totalVariable = 0; let totalSpends = 0;
-            const tbody = document.getElementById('expenses-table-body');
-            let chartLabels = []; let chartData = []; let chartColors = [];
-
+            // Render Expenses (L to AC => index 11 to 28)
+            const expBody = document.getElementById('cf-expenses-body');
+            expBody.innerHTML = '';
+            
+            let expenses = [];
+            for(let c = 11; c <= 28; c++) {
+                if (row[c] && row[c].trim() !== '' && row[c] !== '€0.00') {
+                    const valNum = parseFloat(row[c].replace(/[^0-9.-]+/g,""));
+                    if (!isNaN(valNum) && valNum > 0) {
+                        expenses.push({ name: headers[c], amount: valNum });
+                    }
+                }
+            }
+            
+            // Sort by highest expense
             expenses.sort((a, b) => b.amount - a.amount);
-
+            
+            let totalExp = 0;
             expenses.forEach(exp => {
-                if (exp.amount <= 0 || isNaN(exp.amount)) return;
-
-                totalSpends += exp.amount;
-                if (exp.type === 'fixed') totalFixed += exp.amount;
-                else totalVariable += exp.amount;
-
-                const tr = document.createElement('tr');
-                tr.className = 'border-b border-slate-700/50 hover:bg-slate-700/20 transition-colors';
-                const typeColor = exp.type === 'fixed' ? 'text-slate-400' : 'text-emerald-400';
-                
-                tr.innerHTML = `
-                    <td class="py-3 font-semibold text-white">${exp.name}</td>
-                    <td class="py-3 text-right font-mono ${typeColor}">€${exp.amount.toFixed(2)}</td>
+                totalExp += exp.amount;
+                expBody.innerHTML += `
+                    <tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
+                        <td class="py-2 text-slate-300 px-2">${exp.name}</td>
+                        <td class="py-2 text-right text-rose-300 px-2">€${exp.amount.toFixed(2)}</td>
+                    </tr>
                 `;
-                tbody.appendChild(tr);
-
-                chartLabels.push(exp.name);
-                chartData.push(exp.amount);
-                chartColors.push(exp.type === 'fixed' ? 
-                    `hsl(${Math.floor(Math.random() * 20) + 340}, 70%, 50%)` : 
-                    `hsl(${Math.floor(Math.random() * 40) + 140}, 70%, 50%)`);
             });
-
-            document.getElementById('exp-total').innerText = '€' + totalSpends.toFixed(2);
-            document.getElementById('exp-fixed').innerText = '€' + totalFixed.toFixed(2);
-            document.getElementById('exp-variable').innerText = '€' + totalVariable.toFixed(2);
-
-            const ctx = document.getElementById('expensesChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: chartLabels,
-                    datasets: [{ data: chartData, backgroundColor: chartColors, borderWidth: 0, hoverOffset: 4 }]
-                },
-                options: { responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return ' €' + context.parsed; } } } } }
-            });
+            document.getElementById('cf-expenses-total').innerText = '€' + totalExp.toFixed(2);
         }
 
-        // --- INVESTMENTS LOGIC ---
-        function populateInvestments(assetRows) {
-            if (!assetRows || assetRows.length < 2) return;
+        // --- VIEW 3: PORTFOLIO WAR ROOM ---
+        function populatePortfolio(rows) {
+            if (!rows || rows.length < 2) return;
             const tbody = document.getElementById('assets-table-body');
-            let labels = []; let chartData = []; let colors = [];
+            tbody.innerHTML = '';
 
-            for (let i = 1; i < assetRows.length; i++) {
-                const row = assetRows[i];
-                if (!row[0]) continue;
+            // Map columns A-N based on your screenshot structure
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row[0] || row[0] === 'Total') continue;
 
-                const ticker = row[0]; const value = row[3] || '€0.00'; const pl = row[6] || '€0.00';
-                const allocation = row[7] || '0%'; const upside = row[12] || '0%';
-                const plColorClass = pl.includes('-') ? 'text-red-400' : 'text-emerald-400';
+                const ticker = row[0];
+                const units = row[1] || '0';
+                const livePrice = row[2] || '€0.00';
+                const curValue = row[3] || '€0.00';
+                const invested = row[5] || '€0.00';
+                const pl = row[6] || '€0.00';
+                const alloc = row[7] || '0%';
+                const athDiff = row[8] || '0%';
+                // Based on standard sheet export, upside is usually around index 12 or 13
+                const upside = row[12] || row[13] || '0%'; 
 
-                const tr = document.createElement('tr');
-                tr.className = 'border-b border-slate-700/50 hover:bg-slate-700/20 transition-colors';
-                tr.innerHTML = `
-                    <td class="py-3 font-bold text-white">${ticker}</td>
-                    <td class="py-3">${value}</td>
-                    <td class="py-3 font-semibold ${plColorClass}">${pl}</td>
-                    <td class="py-3">${allocation}</td>
-                    <td class="py-3">${upside}</td>
+                const plColor = pl.includes('-') ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold';
+                const athColor = athDiff.includes('-') ? 'text-rose-400' : 'text-slate-300';
+
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
+                        <td class="p-3 font-bold text-white">${ticker}</td>
+                        <td class="p-3 text-slate-300">${parseFloat(units).toFixed(2)}</td>
+                        <td class="p-3 text-slate-300">${livePrice}</td>
+                        <td class="p-3 text-slate-400">${invested}</td>
+                        <td class="p-3 font-semibold text-white">${curValue}</td>
+                        <td class="p-3 ${plColor}">${pl}</td>
+                        <td class="p-3 text-slate-300">${alloc}</td>
+                        <td class="p-3 ${athColor}">${athDiff}</td>
+                        <td class="p-3 text-blue-400 font-semibold">${upside}</td>
+                    </tr>
                 `;
-                tbody.appendChild(tr);
-
-                const allocValue = parseFloat(allocation.replace('%', ''));
-                if (allocValue > 2) {
-                    labels.push(ticker); chartData.push(allocValue);
-                    colors.push(`hsl(${Math.floor(Math.random() * 60) + 140}, 70%, 50%)`);
-                }
             }
-
-            const ctx = document.getElementById('allocationChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: labels, datasets: [{ data: chartData, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] },
-                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1' } } } }
-            });
         }
 
-        // --- SIMULATOR LOGIC ---
-        let simulatorChartInstance = null;
-
-        function initSimulator() {
-            document.getElementById('sim-starting-nw').innerText = '€' + currentNWValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            updateSimulator(); 
-        }
-
-        function updateSimulator() {
-            const annualContrib = parseFloat(document.getElementById('sim-contrib').value);
-            const expectedReturn = parseFloat(document.getElementById('sim-return').value) / 100;
-            
-            document.getElementById('sim-contrib-val').innerText = '€' + annualContrib.toLocaleString('en-US');
-            document.getElementById('sim-return-val').innerText = (expectedReturn * 100).toFixed(1) + '%';
-
-            let chartLabels = [];
-            let chartData = [];
-            
-            let currentYearWealth = currentNWValue;
-            const targetWealth = 1000000;
-            let hit1M = false;
-            let yearsTo1M = 0;
-            let wealth10Yr = 0;
-
-            const maxYears = 30; 
-
-            for(let year = 0; year <= maxYears; year++) {
-                chartLabels.push('Year ' + year);
-                chartData.push(currentYearWealth);
-
-                if (year === 10) wealth10Yr = currentYearWealth;
-
-                if (!hit1M && currentYearWealth >= targetWealth) {
-                    let previousWealth = year === 0 ? currentNWValue : chartData[year-1];
-                    let diff = currentYearWealth - previousWealth;
-                    let fraction = diff > 0 ? (targetWealth - previousWealth) / diff : 0;
-                    yearsTo1M = (year - 1) + fraction;
-                    hit1M = true;
-                }
-                currentYearWealth = (currentYearWealth * (1 + expectedReturn)) + annualContrib;
-            }
-
-            if (hit1M) document.getElementById('sim-years-to-1m').innerText = yearsTo1M.toFixed(1) + ' Years';
-            else document.getElementById('sim-years-to-1m').innerText = '> 30 Years';
-
-            document.getElementById('sim-10yr-wealth').innerText = '€' + wealth10Yr.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-            drawSimulatorChart(chartLabels, chartData);
-        }
-
-        function drawSimulatorChart(labels, data) {
-            const ctx = document.getElementById('simulatorChart').getContext('2d');
-            if (simulatorChartInstance) simulatorChartInstance.destroy(); 
-
-            simulatorChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Projected Net Worth',
-                        data: data,
-                        borderColor: '#10b981', 
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 0,
-                        pointHitRadius: 10
-                    },
-                    {
-                        label: '€1M Target',
-                        data: Array(labels.length).fill(1000000),
-                        borderColor: '#cbd5e1', 
-                        borderWidth: 1,
-                        borderDash: [5, 5],
-                        fill: false,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, ticks: { callback: function(value) { return '€' + (value / 1000) + 'k'; }, color: '#94a3b8' }, grid: { color: '#334155' } },
-                        x: { ticks: { color: '#94a3b8', maxTicksLimit: 10 }, grid: { color: '#334155' } }
-                    },
-                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return ' €' + context.parsed.y.toLocaleString('en-US', {maximumFractionDigits: 0}); } } } }
-                }
-            });
-        }
-
-        // Run on load
         window.onload = initApp;
     </script>
 </body>
