@@ -8,7 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .card { background-color: #1e293b; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        /* Adjusted card background to match your screenshot's dark navy tone */
+        .card { background-color: #172033; border-radius: 0.25rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
         .tab-btn.active { border-bottom: 2px solid #10b981; color: #10b981; }
         .hidden-tab { display: none; }
         /* Custom scrollbar */
@@ -16,6 +17,11 @@
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        /* Dashboard specific styling to match screenshot */
+        .dash-title { font-size: 0.75rem; font-weight: 700; color: #f8fafc; text-transform: uppercase; margin-bottom: 1rem; text-align: center; letter-spacing: 0.05em;}
+        .dash-value { font-size: 2.25rem; font-weight: 700; text-align: center; }
+        .text-fire-green { color: #34d399; } /* Custom vibrant green from your screenshot */
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -24,7 +30,8 @@
         <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-emerald-400">Financial War Room</h1>
             <nav class="flex space-x-6 overflow-x-auto">
-                <button onclick="switchTab('macro')" id="btn-macro" class="tab-btn active pb-1 font-semibold hover:text-emerald-300 whitespace-nowrap">Macro Summary</button>
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn active pb-1 font-semibold hover:text-emerald-300 whitespace-nowrap">Dashboard</button>
+                <button onclick="switchTab('macro')" id="btn-macro" class="tab-btn pb-1 font-semibold hover:text-emerald-300 text-slate-400 whitespace-nowrap">Macro Summary</button>
                 <button onclick="switchTab('cashflow')" id="btn-cashflow" class="tab-btn pb-1 font-semibold hover:text-emerald-300 text-slate-400 whitespace-nowrap">Cash Flow Detail</button>
                 <button onclick="switchTab('portfolio')" id="btn-portfolio" class="tab-btn pb-1 font-semibold hover:text-emerald-300 text-slate-400 whitespace-nowrap">Portfolio War Room</button>
             </nav>
@@ -33,6 +40,111 @@
 
     <main class="flex-grow max-w-7xl mx-auto px-4 py-8 w-full">
         <div id="loading" class="text-center text-xl text-emerald-400 py-10">Syncing with Google Sheets...</div>
+
+        <div id="tab-dashboard" class="hidden-tab">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <div class="card flex flex-col justify-center">
+                    <h3 class="dash-title">Current Net Worth</h3>
+                    <p id="d-nw" class="dash-value text-fire-green">Loading...</p>
+                </div>
+                <div class="card flex flex-col justify-center">
+                    <h3 class="dash-title">Monthly Change</h3>
+                    <div class="flex justify-center items-baseline space-x-4">
+                        <p id="d-m-change-val" class="dash-value text-fire-green">€0</p>
+                        <p id="d-m-change-pct" class="text-xl font-bold text-fire-green">0.00%</p>
+                    </div>
+                </div>
+                <div class="card flex flex-col justify-center">
+                    <h3 class="dash-title">Yearly Change</h3>
+                    <div class="flex justify-center items-baseline space-x-4">
+                        <p id="d-y-change-val" class="dash-value text-fire-green">€0</p>
+                        <p id="d-y-change-pct" class="text-xl font-bold text-fire-green">0.00%</p>
+                    </div>
+                </div>
+                <div class="card flex flex-col justify-center">
+                    <h3 class="dash-title">€1M Date</h3>
+                    <p id="d-1m-date" class="dash-value text-white">July 10, 2047</p>
+                </div>
+
+                <div class="card flex flex-col justify-center items-center">
+                    <h3 class="dash-title">Trend (12 Months)</h3>
+                    <div class="w-full h-20 relative">
+                        <svg viewBox="0 0 100 40" class="w-full h-full stroke-blue-500" fill="none" stroke-width="2">
+                            <line x1="10" y1="10" x2="90" y2="35" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="card flex flex-col justify-center">
+                    <h3 class="dash-title">Progress to €1M</h3>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-full bg-slate-900 border border-blue-500 h-8 p-0.5 flex">
+                            <div id="d-progress-bar" class="bg-fire-green h-full" style="width: 0%"></div>
+                        </div>
+                        <span id="d-progress-text" class="text-fire-green font-bold whitespace-nowrap">0.00%</span>
+                    </div>
+                </div>
+                <div class="card flex flex-col justify-center">
+                    <h3 class="dash-title">Survival Time</h3>
+                    <p id="d-survival" class="text-2xl font-bold text-center text-fire-green">0.00 Months of Freedom</p>
+                </div>
+                <div class="card lg:row-span-2 flex flex-col">
+                    <h3 class="dash-title">Yearly Investment</h3>
+                    <div class="flex justify-between text-center mb-4">
+                        <div>
+                            <p class="text-[0.6rem] text-slate-400 uppercase font-bold tracking-wider">Required</p>
+                            <p class="text-2xl font-bold text-fire-green">€19,200</p>
+                        </div>
+                        <div>
+                            <p class="text-[0.6rem] text-amber-500 uppercase font-bold tracking-wider">Pending</p>
+                            <p id="d-pending" class="text-2xl font-bold text-amber-500">€14,513</p>
+                        </div>
+                    </div>
+                    <div class="flex-grow overflow-hidden text-xs text-slate-300 flex flex-col justify-between mt-2">
+                        <div class="flex justify-between"><span class="text-slate-400">Year 1</span><span class="text-fire-green">€89,338.91</span><span class="text-white">€26,002.86</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Year 2</span><span class="text-fire-green">€128,916.18</span><span class="text-white">€65,580.13</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Year 3</span><span class="text-fire-green">€177,336.99</span><span class="text-white">€114,000.94</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Year 4</span><span class="text-fire-green">€236,577.44</span><span class="text-white">€173,241.39</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Year 5</span><span class="text-fire-green">€309,055.17</span><span class="text-white">€245,719.12</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Year 6</span><span class="text-fire-green">€397,728.05</span><span class="text-white">€334,392.00</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Year 7</span><span class="text-fire-green">€506,214.88</span><span class="text-white">€442,878.83</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Year 8</span><span class="text-fire-green">€638,943.11</span><span class="text-white">€575,607.06</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Year 9</span><span class="text-fire-green">€801,329.46</span><span class="text-white">€737,993.41</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Year 10</span><span class="text-fire-green">€1,000,001.05</span><span class="text-white">€936,665.00</span></div>
+                    </div>
+                </div>
+
+                <div class="card flex flex-col justify-center items-center">
+                    <h3 class="dash-title">Savings Rate Gauge</h3>
+                    <div id="d-sr-gauge" class="bg-[#bbf7d0] text-slate-900 font-bold px-6 py-2 flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                        <span>ON TRACK</span>
+                    </div>
+                </div>
+                <div class="card flex flex-col justify-center items-center p-2">
+                    <h3 class="dash-title mb-1">The Simulator</h3>
+                    <table class="w-full text-center text-xs mb-2">
+                        <thead>
+                            <tr class="text-slate-400"><th class="font-normal border-b border-r border-slate-600 pb-1">Ann. Contribution</th><th class="font-normal border-b border-slate-600 pb-1">Exp. Return</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="font-bold text-lg pt-1 border-r border-slate-600">19200</td><td class="font-bold text-lg pt-1">19.22%</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="w-full border border-slate-600 text-center py-1">
+                        <p class="text-[0.6rem] text-slate-400">Projected Wealth in 10 Years</p>
+                        <p class="text-xl font-bold text-white">$998,869.89</p>
+                    </div>
+                </div>
+                <div class="card flex flex-col justify-center">
+                    <h3 class="dash-title mb-1">Coast Status</h3>
+                    <p class="text-2xl font-bold text-center text-amber-500 tracking-widest mb-4">PUSHING</p>
+                    <h3 class="dash-title mb-1">Monthly Investing Capacity</h3>
+                    <p id="d-capacity" class="text-2xl font-bold text-center text-amber-500">€350</p>
+                </div>
+
+            </div>
+        </div>
 
         <div id="tab-macro" class="hidden-tab">
             <div class="mb-4 flex justify-between items-end">
@@ -167,22 +279,23 @@
 
         async function initApp() {
             try {
-                // Fetch Ledger A-AJ (Macro Summary & Cash Flow Detail)
+                // Fetch Ledger
                 const ledgerRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/LEDGER!A1:AJ50?key=${API_KEY}`);
                 const ledgerData = await ledgerRes.json();
                 globalLedgerData = ledgerData.values;
                 
-                // Fetch Assets (Portfolio War Room)
+                // Fetch Assets
                 const assetsRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/ASSETS!A1:N50?key=${API_KEY}`);
                 const assetsData = await assetsRes.json();
 
                 document.getElementById('loading').style.display = 'none';
                 
+                populateDashboard(globalLedgerData);
                 populateMacroSummary(globalLedgerData);
                 setupCashFlowDropdown(globalLedgerData);
                 populatePortfolio(assetsData.values);
                 
-                switchTab('macro');
+                switchTab('dashboard'); // Default to new Dashboard
 
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -190,11 +303,84 @@
             }
         }
 
-        // --- VIEW 1: MACRO SUMMARY ---
+        // --- VIEW 1: MAIN DASHBOARD LOGIC ---
+        function populateDashboard(rows) {
+            if (!rows || rows.length < 2) return;
+            
+            // Find Latest Row
+            let latestRowIndex = 1;
+            for(let i = rows.length - 1; i >= 1; i--) {
+                if (rows[i] && rows[i][0] && rows[i][0].includes('/')) {
+                    latestRowIndex = i;
+                    break;
+                }
+            }
+            
+            const latestRow = rows[latestRowIndex];
+            const prevRow = latestRowIndex > 1 ? rows[latestRowIndex - 1] : null;
+
+            // 1. Current Net Worth
+            const currentNwStr = latestRow[6] || '€0';
+            const currentNw = parseFloat(currentNwStr.replace(/[^0-9.-]+/g,"")) || 0;
+            document.getElementById('d-nw').innerText = currentNwStr;
+
+            // 2. Monthly Change
+            if (prevRow) {
+                const prevNwStr = prevRow[6] || '€0';
+                const prevNw = parseFloat(prevNwStr.replace(/[^0-9.-]+/g,"")) || 0;
+                const mChange = currentNw - prevNw;
+                const mPct = prevNw > 0 ? (mChange / prevNw) * 100 : 0;
+                
+                document.getElementById('d-m-change-val').innerText = (mChange >= 0 ? '€' : '-€') + Math.abs(mChange).toLocaleString('en-US', {maximumFractionDigits:0});
+                document.getElementById('d-m-change-pct').innerText = mPct.toFixed(2) + '%';
+            }
+
+            // 3. Yearly Change
+            const startNwStr = rows[1][8] || rows[1][7] || '56990';
+            const startNw = parseFloat(startNwStr.replace(/[^0-9.-]+/g,"")) || 56990;
+            const yChange = currentNw - startNw;
+            const yPct = startNw > 0 ? (yChange / startNw) * 100 : 0;
+            
+            document.getElementById('d-y-change-val').innerText = (yChange >= 0 ? '€' : '-€') + Math.abs(yChange).toLocaleString('en-US', {maximumFractionDigits:2});
+            document.getElementById('d-y-change-pct').innerText = yPct.toFixed(2) + '%';
+
+            // 4. Progress to 1M
+            const progress = (currentNw / 1000000) * 100;
+            document.getElementById('d-progress-bar').style.width = progress.toFixed(2) + '%';
+            document.getElementById('d-progress-text').innerText = progress.toFixed(2) + '%';
+
+            // 5. Survival Time (NW / Monthly Spends)
+            const spendsStr = latestRow[2] || '€1';
+            const spends = parseFloat(spendsStr.replace(/[^0-9.-]+/g,"")) || 1;
+            const survival = currentNw / spends;
+            document.getElementById('d-survival').innerText = survival.toFixed(2) + ' Months of Freedom';
+
+            // 6. Savings Rate Gauge
+            const srStr = latestRow[3] || '0%';
+            const sr = parseFloat(srStr.replace(/[^0-9.-]+/g,""));
+            const gauge = document.getElementById('d-sr-gauge');
+            if(sr >= 20) {
+                gauge.className = "bg-[#bbf7d0] text-slate-900 font-bold px-6 py-2 flex items-center space-x-2";
+                gauge.innerHTML = `<svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg><span>ON TRACK</span>`;
+            } else {
+                gauge.className = "bg-rose-200 text-rose-900 font-bold px-6 py-2 flex items-center space-x-2";
+                gauge.innerHTML = `<span>NEEDS ATTENTION</span>`;
+            }
+
+            // 7. Monthly Capacity / Pending investment
+            const capacityStr = latestRow[4] || '€0'; // Cash Added to investment column
+            document.getElementById('d-capacity').innerText = capacityStr;
+            
+            // Just a rough pending calculation based on 19200 target
+            const capacity = parseFloat(capacityStr.replace(/[^0-9.-]+/g,"")) || 0;
+            const pending = Math.max(0, 19200 - (capacity * 12)); // Rough estimate
+            document.getElementById('d-pending').innerText = '€' + pending.toLocaleString('en-US', {maximumFractionDigits:0});
+        }
+
+        // --- VIEW 2: MACRO SUMMARY ---
         function populateMacroSummary(rows) {
             if (!rows || rows.length < 2) return;
             
-            // Find the most recent populated row in column A-G
             let latestRow = rows[1]; 
             for(let i = rows.length - 1; i >= 1; i--) {
                 if (rows[i] && rows[i][0] && rows[i][0].includes('/')) {
@@ -213,18 +399,16 @@
             
             document.getElementById('mac-nw').innerText = latestRow[6] || '€0.00';
             
-            // Start of year net worth is usually in row 1, column H (index 7) or I
             const startNw = rows[1][8] || rows[1][7] || '€56,990.00';
             document.getElementById('mac-start-nw').innerText = startNw.includes('€') ? startNw : '€' + startNw;
         }
 
-        // --- VIEW 2: CASH FLOW DETAIL ---
+        // --- VIEW 3: CASH FLOW DETAIL ---
         function setupCashFlowDropdown(rows) {
             if (!rows || rows.length < 2) return;
             const select = document.getElementById('month-selector');
             select.innerHTML = '';
             
-            // Column K (index 10) holds the Month names
             for(let i = 1; i < rows.length; i++) {
                 if(rows[i] && rows[i][10] && rows[i][10].trim() !== '') {
                     const option = document.createElement('option');
@@ -243,7 +427,6 @@
 
             if (!row) return;
 
-            // Render Income (AG = 32, AH = 33, AI = 34)
             const incomeBody = document.getElementById('cf-income-body');
             incomeBody.innerHTML = '';
             
@@ -269,7 +452,6 @@
             });
             document.getElementById('cf-income-total').innerText = '€' + totalInc.toFixed(2);
 
-            // Render Expenses (L to AC => index 11 to 28)
             const expBody = document.getElementById('cf-expenses-body');
             expBody.innerHTML = '';
             
@@ -283,7 +465,6 @@
                 }
             }
             
-            // Sort by highest expense
             expenses.sort((a, b) => b.amount - a.amount);
             
             let totalExp = 0;
@@ -299,13 +480,12 @@
             document.getElementById('cf-expenses-total').innerText = '€' + totalExp.toFixed(2);
         }
 
-        // --- VIEW 3: PORTFOLIO WAR ROOM ---
+        // --- VIEW 4: PORTFOLIO WAR ROOM ---
         function populatePortfolio(rows) {
             if (!rows || rows.length < 2) return;
             const tbody = document.getElementById('assets-table-body');
             tbody.innerHTML = '';
 
-            // Map columns A-N based on your screenshot structure
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row[0] || row[0] === 'Total') continue;
@@ -318,7 +498,6 @@
                 const pl = row[6] || '€0.00';
                 const alloc = row[7] || '0%';
                 const athDiff = row[8] || '0%';
-                // Based on standard sheet export, upside is usually around index 12 or 13
                 const upside = row[12] || row[13] || '0%'; 
 
                 const plColor = pl.includes('-') ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold';
