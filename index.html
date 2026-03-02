@@ -9,114 +9,138 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root {
-  --bg:      #070b10;
-  --bg2:     #0c1219;
-  --bg3:     #111820;
-  --bg4:     #162030;
-  --border:  #1c2d42;
-  --border2: #243548;
-  --g:    #00ffa3;
-  --b:    #38bdf8;
-  --y:    #fbbf24;
-  --r:    #f87171;
-  --p:    #a78bfa;
-  --txt:  #ddeeff;
-  --txt2: #6888aa;
-  --txt3: #2d4460;
-  --mono: 'DM Mono', monospace;
-  --sans: 'DM Sans', sans-serif;
-  --display: 'Bebas Neue', sans-serif;
+  --bg:      #070b10; --bg2:     #0c1219; --bg3:     #111820; --bg4:     #162030;
+  --border:  #1c2d42; --border2: #243548; --g:    #00ffa3; --b:    #38bdf8;
+  --y:    #fbbf24; --r:    #f87171; --p:    #a78bfa; --txt:  #ddeeff;
+  --txt2: #6888aa; --txt3: #2d4460; --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif; --display: 'Bebas Neue', sans-serif;
 }
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  background: var(--bg);
-  color: var(--txt);
-  font-family: var(--sans);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* noise texture */
-body::after {
-  content: '';
-  position: fixed; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-  pointer-events: none; z-index: 9999; opacity: 0.5;
-}
-
-#loader {
-  position: fixed; inset: 0;
-  background: var(--bg);
-  z-index: 10000;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  font-family: var(--mono); color: var(--g);
-  text-align: center; padding: 20px;
-}
-
-header {
-  position: sticky; top: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 28px;
-  background: rgba(7,11,16,0.92);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-}
-
-.logo {
-  font-family: var(--display);
-  font-size: 1.5rem;
-  letter-spacing: 0.12em;
-  color: var(--g);
-}
-
-.header-nw {
-  font-family: var(--display);
-  font-size: 1.6rem;
-  color: var(--txt);
-}
-.header-nw span { color: var(--g); }
-
-main { padding: 20px 28px 40px; max-width: 1700px; margin: 0 auto; }
-
-.section-label {
-  font-family: var(--mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.2em;
-  color: var(--txt3);
-  text-transform: uppercase;
-  margin: 20px 0 10px;
-  display: flex; align-items: center; gap: 10px;
-}
+body { background: var(--bg); color: var(--txt); font-family: var(--sans); min-height: 100vh; }
+#loader { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--mono); color: var(--g); }
+header { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 12px 28px; background: rgba(7,11,16,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+.logo { font-family: var(--display); font-size: 1.5rem; letter-spacing: 0.12em; color: var(--g); }
+.header-nw { font-family: var(--display); font-size: 1.6rem; color: var(--txt); }
+main { padding: 20px 28px; max-width: 1700px; margin: 0 auto; }
+.section-label { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.2em; color: var(--txt3); text-transform: uppercase; margin: 20px 0 10px; display: flex; align-items: center; gap: 10px; }
 .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
-.grid-main { display: grid; grid-template-columns: 2.4fr 1fr; gap: 12px; }
-
-.card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 18px 20px;
-}
-
-.kpi-big {
-  font-family: var(--display);
-  font-size: 2.4rem;
-  color: var(--g);
-  line-height: 1;
-}
-
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+.kpi-big { font-family: var(--display); font-size: 2.4rem; color: var(--g); line-height: 1; }
 .h240 { position: relative; height: 240px; }
-
-@media(max-width:1100px) {
-  .grid-4 { grid-template-columns: 1fr 1fr; }
-  .grid-main { grid-template-columns: 1fr; }
-}
+@media(max-width:800px) { .grid-4 { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
 <div id="loader">
+  <div>SYNCING WITH GOOGLE SHEETS...</div>
+  <div id="status" style="font-size: 0.6rem; color: var(--txt3); margin-top: 10px;">Initializing...</div>
+</div>
+
+<header>
+  <div class="logo">WEALTH<span style="color:var(--txt2)">OS</span></div>
+  <div class="header-nw">€<span id="hdr-nw">0.00</span></div>
+</header>
+
+<main>
+  <div class="section-label">Performance</div>
+  <div class="grid-4">
+    <div class="card"><div class="kpi-big" id="ov-nw">€0</div><div style="font-size:0.6rem; color:var(--txt3)">NET WORTH</div></div>
+    <div class="card"><div class="kpi-big" id="ov-delta" style="color:var(--b)">€0</div><div style="font-size:0.6rem; color:var(--txt3)">TOTAL GROWTH</div></div>
+    <div class="card"><div class="kpi-big" id="ov-count" style="color:var(--y)">0</div><div style="font-size:0.6rem; color:var(--txt3)">MONTHS LOGGED</div></div>
+    <div class="card"><div class="kpi-big" id="ov-fire" style="color:var(--p)">0%</div><div style="font-size:0.6rem; color:var(--txt3)">FIRE GOAL (€1M)</div></div>
+  </div>
+
+  <div class="section-label">Trajectory</div>
+  <div class="card"><div class="h240"><canvas id="chart-nw"></canvas></div></div>
+</main>
+
+<script>
+const CONFIG = {
+  apiKey: 'AIzaSyAbTJNnWCixdHO0pG8I5xBKm-_JxEGWz1U',
+  sheetId: '1n8-7_6vy5onfQro8Kp73sxZrUl0DXGvfvh1ccaoFvY4',
+  tabs: { ledger: 'LEDGER' }
+};
+
+async function init() {
+  const statusEl = document.getElementById('status');
+  try {
+    statusEl.innerText = "Requesting data from Google...";
+    // Added t= parameter to prevent browser caching of the request
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.sheetId}/values/${CONFIG.tabs.ledger}?key=${CONFIG.apiKey}&t=${Date.now()}`;
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error.message || "Permissions Error");
+    }
+    
+    const data = await response.json();
+    const rows = data.values;
+
+    if (!rows || rows.length < 2) throw new Error("Sheet is empty or missing headers");
+
+    statusEl.innerText = "Processing records...";
+    // Map Column A (row[0]) to Date and Column G (row[6]) to Value
+    const history = rows.slice(1)
+      .filter(row => row[0] && row[6])
+      .map(row => {
+        const cleanVal = row[6].replace(/[€, \s]/g, '');
+        return { d: row[0], v: parseFloat(cleanVal) };
+      })
+      .filter(item => !isNaN(item.v));
+
+    if (history.length === 0) throw new Error("No numeric data found in Column G");
+
+    const currentVal = history[history.length - 1].v;
+    const delta = currentVal - history[0].v;
+
+    // Update UI
+    document.getElementById('hdr-nw').innerText = currentVal.toLocaleString();
+    document.getElementById('ov-nw').innerText = '€' + currentVal.toLocaleString();
+    document.getElementById('ov-delta').innerText = '€' + delta.toLocaleString();
+    document.getElementById('ov-count').innerText = history.length;
+    document.getElementById('ov-fire').innerText = ((currentVal / 1000000) * 100).toFixed(1) + '%';
+
+    renderChart(history);
+    document.getElementById('loader').style.display = 'none';
+
+  } catch (err) {
+    statusEl.style.color = "#f87171";
+    statusEl.innerHTML = `ERROR: ${err.message}<br><br>1. Check Google Sheet is "Public/Viewer"<br>2. Ensure LEDGER Tab exists<br>3. Check Column G has numbers`;
+    console.error("Initialization error:", err);
+  }
+}
+
+function renderChart(history) {
+  const ctx = document.getElementById('chart-nw').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: history.map(h => h.d),
+      datasets: [{
+        label: 'Net Worth',
+        data: history.map(h => h.v),
+        borderColor: '#00ffa3',
+        backgroundColor: 'rgba(0, 255, 163, 0.1)',
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#2d4460', font: { family: 'DM Mono', size: 10 } } },
+        y: { ticks: { color: '#2d4460', font: { family: 'DM Mono', size: 10 }, callback: v => '€' + (v/1000) + 'k' } }
+      }
+    }
+  });
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
