@@ -8,138 +8,115 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-/* CSS styles remain identical to your original file for consistency */
-:root { --bg: #070b10; --bg2: #0c1219; --bg3: #111820; --bg4: #162030; --border: #1c2d42; --border2: #243548; --g: #00ffa3; --b: #38bdf8; --y: #fbbf24; --r: #f87171; --p: #a78bfa; --txt: #ddeeff; --txt2: #6888aa; --txt3: #2d4460; --mono: 'DM Mono', monospace; --sans: 'DM Sans', sans-serif; --display: 'Bebas Neue', sans-serif; }
+:root {
+  --bg:      #070b10;
+  --bg2:     #0c1219;
+  --bg3:     #111820;
+  --bg4:     #162030;
+  --border:  #1c2d42;
+  --border2: #243548;
+  --g:    #00ffa3;
+  --b:    #38bdf8;
+  --y:    #fbbf24;
+  --r:    #f87171;
+  --p:    #a78bfa;
+  --txt:  #ddeeff;
+  --txt2: #6888aa;
+  --txt3: #2d4460;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --display: 'Bebas Neue', sans-serif;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--txt); font-family: var(--sans); min-height: 100vh; overflow-x: hidden; }
-header { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 12px 28px; background: rgba(7,11,16,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
-.logo { font-family: var(--display); font-size: 1.5rem; letter-spacing: 0.12em; color: var(--g); }
-.header-meta { display: flex; align-items: center; gap: 20px; }
-.header-nw { font-family: var(--display); font-size: 1.6rem; color: var(--txt); }
+
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* noise texture */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999; opacity: 0.5;
+}
+
+#loader {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  z-index: 10000;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: var(--mono); color: var(--g);
+  text-align: center; padding: 20px;
+}
+
+header {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 28px;
+  background: rgba(7,11,16,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  letter-spacing: 0.12em;
+  color: var(--g);
+}
+
+.header-nw {
+  font-family: var(--display);
+  font-size: 1.6rem;
+  color: var(--txt);
+}
 .header-nw span { color: var(--g); }
-.pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-family: var(--mono); font-size: 0.62rem; font-weight: 500; }
-.pill.up { background: rgba(0,255,163,0.1); color: var(--g); border: 1px solid rgba(0,255,163,0.25); }
-.pill.down { background: rgba(248,113,113,0.1); color: var(--r); border: 1px solid rgba(248,113,113,0.25); }
-.nav-tabs { display: flex; gap: 2px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
-.nav-tab { font-family: var(--mono); font-size: 0.6rem; text-transform: uppercase; padding: 5px 14px; border-radius: 5px; cursor: pointer; color: var(--txt3); background: transparent; border: none; }
-.nav-tab.active { background: var(--bg4); color: var(--txt); border: 1px solid var(--border2); }
+
 main { padding: 20px 28px 40px; max-width: 1700px; margin: 0 auto; }
-.section-label { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.2em; color: var(--txt3); text-transform: uppercase; margin: 20px 0 10px; display: flex; align-items: center; gap: 10px; }
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  color: var(--txt3);
+  text-transform: uppercase;
+  margin: 20px 0 10px;
+  display: flex; align-items: center; gap: 10px;
+}
 .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
 .grid-main { display: grid; grid-template-columns: 2.4fr 1fr; gap: 12px; }
-.card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; position: relative; }
-.kpi-big { font-family: var(--display); font-size: 2.4rem; color: var(--g); line-height: 1; }
+
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+
+.kpi-big {
+  font-family: var(--display);
+  font-size: 2.4rem;
+  color: var(--g);
+  line-height: 1;
+}
+
 .h240 { position: relative; height: 240px; }
-.view { display: none; }
-.view.active { display: block; }
-/* Loading Overlay */
-#loader { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; font-family: var(--mono); color: var(--g); }
+
+@media(max-width:1100px) {
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  .grid-main { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
 
-<div id="loader">INITIALIZING LIVE DATA STREAM...</div>
-
-<header>
-  <div class="logo">WEALTH<span style="color:var(--txt2)">OS</span></div>
-  <div class="header-meta">
-    <div>
-      <div style="font-family:var(--mono);font-size:0.55rem;color:var(--txt3);text-transform:uppercase;">Net Worth</div>
-      <div class="header-nw">€<span id="hdr-nw">0.00</span></div>
-    </div>
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="switchView('overview')">Overview</button>
-    </div>
-  </div>
-</header>
-
-<main>
-  <div class="view active" id="view-overview">
-    <div class="section-label">Performance</div>
-    <div class="grid-4">
-      <div class="card"><div class="kpi-big" id="ov-nw">€0</div><div style="font-size:0.6rem;color:var(--txt3)">CURRENT NET WORTH</div></div>
-      <div class="card"><div class="kpi-big" id="ov-ytd" style="color:var(--b)">€0</div><div style="font-size:0.6rem;color:var(--txt3)">YTD CHANGE</div></div>
-      <div class="card"><div class="kpi-big" id="ov-sr" style="color:var(--y)">0%</div><div style="font-size:0.6rem;color:var(--txt3)">SAVINGS RATE</div></div>
-      <div class="card"><div class="kpi-big" id="ov-fire" style="color:var(--p)">0%</div><div style="font-size:0.6rem;color:var(--txt3)">FIRE PROGRESS</div></div>
-    </div>
-
-    <div class="section-label">Net Worth Trajectory</div>
-    <div class="grid-main">
-        <div class="card"><div class="h240"><canvas id="chart-nw"></canvas></div></div>
-        <div class="card">
-            <div id="fire-status" style="font-family:var(--display); font-size:2rem; color:var(--y)">CALCULATING...</div>
-            <div style="font-family:var(--mono); font-size:0.7rem; color:var(--txt3)">Projected Freedom Date</div>
-        </div>
-    </div>
-  </div>
-</main>
-
-<script>
-// ─── CONFIGURATION ───
-const CONFIG = {
-  apiKey: 'AIzaSyAbTJNnWCixdHO0pG8I5xBKm-_JxEGWz1U', 
-  sheetId: '1n8-7_6vy5onfQro8Kp73sxZrUl0DXGvfvh1ccaoFvY4',
-  tabs: {
-    ledger: 'LEDGER',
-    assets: 'ASSETS',
-    expenses: 'EXPENSES 2025'
-  }
-};
-
-// ─── DATA FETCHING ───
-async function fetchSheet(tabName) {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.sheetId}/values/${tabName}?key=${CONFIG.apiKey}`;
-  const response = await fetch(url);
-  const data = await response.json();
-  return data.values;
-}
-
-async function init() {
-  try {
-    const [ledgerRaw, assetsRaw] = await Promise.all([
-      fetchSheet(CONFIG.tabs.ledger),
-      fetchSheet(CONFIG.tabs.assets)
-    ]);
-
-    // Process Ledger (Assuming Date is Col A, Value is Col B)
-    const history = ledgerRaw.slice(1).map(row => ({ d: row[0], v: parseFloat(row[1].replace(/[€,]/g, '')) }));
-    const currentNW = history[history.length - 1].v;
-    
-    // Update UI
-    document.getElementById('hdr-nw').textContent = currentNW.toLocaleString();
-    document.getElementById('ov-nw').textContent = '€' + currentNW.toLocaleString();
-    
-    renderChart(history);
-    
-    document.getElementById('loader').style.display = 'none';
-  } catch (err) {
-    document.getElementById('loader').textContent = "ERROR FETCHING DATA. CHECK SHEET PERMISSIONS.";
-    console.error(err);
-  }
-}
-
-function renderChart(history) {
-  const ctx = document.getElementById('chart-nw').getContext('2d');
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: history.map(h => h.d),
-      datasets: [{
-        data: history.map(h => h.v),
-        borderColor: '#00ffa3',
-        backgroundColor: 'rgba(0, 255, 163, 0.1)',
-        fill: true,
-        tension: 0.3
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-  });
-}
-
-function switchView(v) { /* Minimal for demo */ }
-
-init();
-</script>
-</body>
-</html>
+<div id="loader">
